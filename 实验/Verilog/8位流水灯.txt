@@ -1,0 +1,55 @@
+Design:
+module eightlamp(
+    input clk,
+    output [7:0]Y
+);
+reg [23:0]count=24'hffffff;
+reg [7:0]led=8'b00000001;
+always@(posedge clk)
+    begin
+        if(count == 24'hffffff)
+            count<=24'h000000;
+        else
+            count<=count+1;
+    end
+always@(posedge clk)
+    begin
+        if(count==24'hffffff)
+        begin
+            if(led==8'b10000000)
+                led<=8'b00000001;
+            else
+                led<=led<<1;
+        end
+    end
+assign Y=led;
+endmodule
+
+Simulation:
+module sim_eightlamp();
+reg clk;
+wire [7:0]Y;
+eightlamp u1(Y);
+always#10 clk=~clk;
+endmodule
+
+CON:
+set_property PACKAGE_PIN F6 [get_ports {Y[7]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {Y[7]}]
+set_property PACKAGE_PIN G4 [get_ports {Y[6]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {Y[6]}]
+set_property PACKAGE_PIN G3 [get_ports {Y[5]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {Y[5]}]
+set_property PACKAGE_PIN J4 [get_ports {Y[4]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {Y[4]}]
+set_property PACKAGE_PIN H4 [get_ports {Y[3]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {Y[3]}]
+set_property PACKAGE_PIN J3 [get_ports {Y[2]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {Y[2]}]
+set_property PACKAGE_PIN J2 [get_ports {Y[1]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {Y[1]}]
+set_property PACKAGE_PIN K2 [get_ports {Y[0]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {Y[0]}]
+
+set_property PACKAGE_PIN P17 [get_ports clk]
+set_property IOSTANDARD LVCMOS33 [get_ports clk]

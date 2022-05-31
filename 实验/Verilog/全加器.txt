@@ -1,0 +1,21 @@
+Design:
+module qjy2(a,b,cin,sum,cout);
+input a,b,cin;
+output sum,cout;
+wire x,y,z;
+qjy_0 u1(a,b,x,y);
+qjy_0 u2(x,cin,sum,z);
+assign cout=y|z;
+endmodule
+
+Simulation:
+module sim_qjy2();
+reg a,b,c;
+wire sum,cout;
+qjy2 u3(a,b,c,sum,cout);
+initial
+    begin
+        a=0;b=0;c=0;
+    end
+always #10 {a,b,c}={a,b,c}+1;
+endmodule

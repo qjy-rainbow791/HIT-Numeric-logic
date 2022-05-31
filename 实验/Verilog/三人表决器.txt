@@ -1,0 +1,24 @@
+Design:qjy
+module EightToOne(D0,D1,D2,D3,D4,D5,D6,D7,A,B,C,F);
+input D0,D1,D2,D3,D4,D5,D6,D7,A,B,C;
+output F;
+assign F=(D0&~A&~B&~C)|(D1&~A&~B&C)|(D2&~A&B&~C)|(D3&~A&B&C)|(D4&A&~B&~C)|(D5&A&~B&C)|(D6&A&B&~C)|(D7&A&B&C);
+endmodule
+
+module qjy(a,b,c,f);
+input a,b,c;
+output f;
+EightToOne u1(0,0,0,1,0,1,1,1,a,b,c,f);
+endmodule
+
+Simulation:
+module sim_qjy();
+reg a,b,c;
+wire f;
+qjy u1(a,b,c,f);
+initial
+    begin
+        a=0;b=0;c=0;
+    end
+always#10 {a,b,c}={a,b,c}+1;
+endmodule

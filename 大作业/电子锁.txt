@@ -1,0 +1,292 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 2021/11/19 11:48:28
+// Design Name: 
+// Module Name: lock
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+module lock(
+clk,//固定时钟信号
+clk0,//密码1
+clk1,//密码2
+clk2,//密码3
+clk3,//密码4
+rst,//复位
+sp,//密码设定信号
+putin,//密码输入信号
+wm,//位码信号，4个
+led,//充当段选信号和灯信号
+countdown_wm,//倒计时信号的位码
+countdown_led,//倒计时信号的段选
+open,//开锁指示信号
+rst_light//重置指示信号
+ );
+
+input clk;
+input clk0,clk1,clk2,clk3;
+input rst;
+input sp;
+input putin;
+
+output reg [3:0] wm;
+output [6:0] led;
+output [6:0] countdown_led;
+output reg [3:0]countdown_wm;
+output reg open;
+output reg rst_light; 
+
+wire [3:0] password0,password1,password2,password3;//存储当前输入的四个数码
+reg [3:0] pw0,pw1,pw2,pw3;//存储设定的四位密码
+reg [3:0] Num;//存储数码管显示的数字是什么
+reg [3:0] countdown;//倒计时信号
+reg [3:0]countdownS;//倒计时灯信号
+reg start_n,rst_n;//开始与复位的输入信号
+reg divtime;//分频时钟信号
+integer clock_led,clock_countdown;//分频辅助变量
+
+initial
+begin
+    countdown=4'b1010; //倒计时10s
+    wm=4'b0001; //最右侧开始
+    divtime=0;
+    clock_led=0;//分频
+    clock_countdown=0; //计数
+    countdown_wm=2'b10; //个位从0变化到0
+    open=1; //开锁
+    rst_light = 0;  //不复位
+end
+
+//调用模10计数器输入密码
+mod10counter u0(clk0,rst_n,start_n,password0);
+mod10counter u1(clk1,rst_n,start_n,password1);
+mod10counter u2(clk2,rst_n,start_n,password2);
+mod10counter u3(clk3,rst_n,start_n,password3);
+
+//调用数码管显示4位密码以及倒计时信号
+smg s0(clk,Num,rst_n,led);
+smg s1(clk,countdownS,0,countdown_led);
+
+
+always @(posedge clk) //输入控制模块
+begin
+    if(countdown==4'b0000)//倒计时结束
+    begin
+        start_n<=0; //不允许输入
+        rst_n<=1; //复位信号置1，令所有数码管显示0
+        rst_light <= 1; //复位信号灯亮起
+    end
+    else
+    begin
+        rst_light <= 0; //复位灯不亮
+    	start_n<=sp|putin; //允许输入
+    	rst_n<=rst|((~putin)&(~sp)); //电路复位信号为1或同时打开输入和重置密码状态，复位
+    end
+
+  
+    if(clock_led==200000)//分频
+    begin
+        divtime<=1;//分频信号为1
+        clock_led<=0;
+    end
+    else
+    begin
+        divtime<=0;
+        clock_led<=clock_led+1;//加1计数
+    end
+
+    
+    if(putin&&countdown!=4'b0000&&~open) //开锁
+    begin
+        if(clock_countdown!=1250000000)
+        begin
+            clock_countdown<=clock_countdown+1;
+        end
+        case(clock_countdown)//
+            1250000000:
+                countdown<=4'b0000;
+            1125000000:
+                countdown<=4'b0001;
+            1000000000:      
+                countdown<=4'b0010;
+            875000000:
+                countdown<=4'b0011;
+            750000000:
+                countdown<=4'b0100;
+            625000000:
+                countdown<=4'b0101;
+            500000000:
+                countdown<=4'b0110;
+            375000000:
+                countdown<=4'b0111;
+            250000000:
+                countdown<=4'b1000;
+            125000000:
+                countdown<=4'b1001;
+            0:
+                countdown<=4'b1010;
+        endcase
+    end
+    else if(~putin) 
+    begin
+        countdown<=4'b1010;//倒计时10
+        clock_countdown<=0;
+    end
+
+ 
+    if(sp && open)//锁打开时可以重置密码
+    begin
+        pw0<=password0;
+        pw1<=password1;
+        pw2<=password2;
+        pw3<=password3;
+    end
+
+end
+
+always @(posedge divtime)//密码的显示
+begin
+    if (wm==4'b0001)
+    begin
+        wm<=4'b0010;
+        Num<=password1;
+    end
+    else if(wm==4'b0010)
+    begin
+        wm<=4'b0100;
+        Num<=password2;
+    end
+    else if(wm==4'b0100)
+    begin
+        wm<=4'b1000;
+        Num<=password3;
+    end
+    else if(wm==4'b1000)
+    begin
+        wm<=4'b0001;
+        Num<=password0;
+    end
+end
+
+always @(posedge divtime)//倒计时显示
+begin
+    if(countdown_wm == 4'b0010)
+    begin
+        if(countdown == 4'b1010)
+            countdownS<=4'b0001;
+        else
+            countdownS<=4'b0000;
+        countdown_wm<=4'b0001;
+    end
+    
+    else if(countdown_wm == 4'b0001)
+    begin
+        countdownS<=countdown;
+        countdown_wm<=4'b1000;
+    end
+    else if(countdown_wm == 4'b1000)
+    begin
+        if(open)
+            countdownS<=4'b0000;
+        else
+            countdownS<=4'b1111;
+        countdown_wm<=4'b0100;
+    end
+    else if(countdown_wm == 4'b0100)
+    begin
+        if(open)
+            countdownS<=4'b1110;
+        else
+            countdownS<=4'b1111;
+        countdown_wm<=4'b0010;
+    end
+end
+
+always @(*)//是否开锁
+begin
+    if(putin)
+    begin
+        if(pw0==password0&&pw1==password1&&pw2==password2&&pw3==password3&&countdown!=4'b0000)
+            open<=1;
+        else
+            open<=0;
+    end
+end
+
+endmodule
+
+module mod10counter(clk,rst,start,out);
+//mod10计数器转换10进制数字
+input clk;//时钟
+input rst;//复位
+input start;//开始
+output reg [3:0] out;//计输出
+always @(posedge clk or posedge rst) //异步清零
+begin
+    if (rst)
+        out <= 4'b0000;//置零
+    else if(start) 
+    begin
+        if(out==4'b1001)
+            out <=4'b0000;//循环回0
+        else
+            out<=out+4'b0001;//计数
+    end
+end
+endmodule
+
+module smg(clk,num,rst,out);
+input clk;//时钟
+input [3:0] num;//输入十进制
+input rst;//复位
+output reg [6:0] out;//控制数码管
+always @(posedge clk or posedge rst)
+begin
+    if(rst)
+        out<=7'b1111110;//0的字形
+    else
+    begin
+        case(num) //数码管字形显示
+            4'b0000:
+                out <= 7'b1111110;
+            4'b0001:
+                out <= 7'b0110000;
+            4'b0010:
+                out <= 7'b1101101;
+            4'b0011:
+                out <= 7'b1111001;
+            4'b0100:
+                out <= 7'b0110011;
+            4'b0101:
+                out <= 7'b1011011;
+            4'b0110:
+                out <= 7'b1011111;
+            4'b0111:
+                out <= 7'b1110000;
+            4'b1000:
+                out <= 7'b1111111;
+            4'b1001:
+                out <= 7'b1111011;
+            4'b1110:
+                out <= 7'b1100111;
+            4'b1111:
+                out <= 7'b0000000;
+            default:
+                out <= 7'b1111110;
+        endcase
+    end
+end
+endmodule

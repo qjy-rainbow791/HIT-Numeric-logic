@@ -1,0 +1,45 @@
+module JK(
+input Reset,
+input Set,
+input clk,
+input J,
+input K,
+output Q
+);
+reg q;
+always@(negedge clk or negedge Reset or negedge Set)
+    begin
+        if(Reset==0) q<=0;
+        else if(Set==0) q<=1;
+        else
+            q<=(J&~q)|(~K&q);
+    end
+assign Q=q;
+endmodule
+
+module JK12(Reset,Set,clk,Y);
+input Reset;
+input Set;
+input clk;
+output [3:0]Y;
+JK u0(Retset,Set,clk,1,1,Y[0]);
+JK u1(Retset,Set,Y[0],1,1,Y[1]);
+JK u2(Retset,Set,Y[1],1,1,Y[2]);
+JK u3(Retset,Set,Y[2],1,1,Y[3]);
+endmodule
+
+
+Simulation:
+module sim_JK12();
+reg Reset,Set,clk;
+wire [3:0]Y;
+JK12 uu(Reset,Set,clk,Y);
+initial
+    begin
+        Reset=0;
+        Set=1;
+        clk=1;
+        Y=0;
+    end
+always#20 clk=~clk;
+endmodule

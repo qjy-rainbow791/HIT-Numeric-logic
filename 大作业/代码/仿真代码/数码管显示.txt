@@ -1,0 +1,44 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 2021/11/10 16:35:13
+// Design Name: 
+// Module Name: smg_t
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module smg_t;
+reg clk,rst;
+wire [6:0] out;
+reg [3:0] num;
+initial begin
+    rst = 0;
+    clk = 0;
+    num = 4'b0000;
+    forever #10 clk = ~clk;
+end
+
+always @(posedge clk,posedge rst)
+begin
+if(!rst)
+    num <= num + 4'b0001;
+else if(num == 4'b1110)
+    rst<=1;
+end
+
+smg s(clk,num,rst,out);
+endmodule
+

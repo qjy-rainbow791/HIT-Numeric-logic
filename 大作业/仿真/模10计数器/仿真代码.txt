@@ -1,0 +1,36 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 2021/11/10 16:42:04
+// Design Name: 
+// Module Name: mod10counter_t
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module mod10counter_t;
+reg rst,clk,start;
+wire [3:0]out;
+initial
+begin
+    rst = 1;
+    #10 rst = 0;
+    start = 1;
+    clk = 0;
+    forever #10 clk = ~clk;
+end
+
+mod10counter m(clk,rst,start,out);
+endmodule

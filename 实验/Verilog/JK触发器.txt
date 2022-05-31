@@ -1,0 +1,43 @@
+Design:
+module JK(
+input Reset,
+input Set,
+input clk,
+input J,
+input K,
+output Q
+);
+reg q;
+initial
+    begin
+        q=0;
+    end
+always@(negedge clk or negedge Reset or negedge Set)
+    begin
+        if(Reset==0) q<=0;
+        else if(Set==0) q<=1;
+        else
+            q<=(J&~q)|(~K&q);
+    end
+assign Q=q;
+endmodule
+
+Simulation:
+module sim_JK();
+reg Reset,Set,clk,J,K;
+wire Q;
+initial clk=0;
+always#5 clk=~clk;
+initial J=0;
+always#20 J<=J+1;
+initial K=0;
+always#10 K<=K+1;
+JK uk(Reset,Set,clk,J,K,Q);
+initial
+    begin
+        Reset=1;
+        Set=1;
+        #40 Reset=0;
+        #80 Reset=1;Set=0;
+    end
+endmodule
